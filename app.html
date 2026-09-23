@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<title>Feedants Dance Competition</title>
+<description>A high-fidelity mobile UI for a classical dance competition platform featuring registration flows and competition details.</description>
+<style>
+:root {
+  --teal-primary: #008080;
+  --teal-secondary: #20B2AA;
+  --teal-light: #f0f9f9;
+  --teal-dark: #006666;
+  --accent-green: #22c55e;
+  --bg-main: #f8fafc;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-main: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --teal-light: #134e4a;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-main: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --teal-light: #134e4a;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#app-container {
+  width: 100%;
+  max-width: 430px; /* iPhone 15 Pro Max width */
+  background: var(--bg-main);
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0,0,0,0.1);
+  min-height: 100vh;
+}
+
+.status-bar {
+  height: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.nav-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 90px; /* Space for bottom nav */
+}
+
+/* Custom Scrollbar */
+.nav-content::-webkit-scrollbar {
+  width: 0;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 430px;
+  height: 80px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-item.active {
+  color: var(--teal-primary);
+}
+
+.center-fab {
+  width: 56px;
+  height: 56px;
+  background: var(--teal-primary);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  margin-top: -30px;
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+}
+
+/* Screen Specific Styles */
+.card {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  margin: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.btn-primary {
+  background: var(--teal-primary);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+}
+
+.teal-pill {
+  background: var(--teal-light);
+  color: var(--teal-primary);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--teal-primary);
+  width: 5%;
+}
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+const { useState, useEffect } = React;
+
+// Lucide-like SVG Icons
+const Icons = {
+  Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Search: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+  Trophy: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+  User: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Plus: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>,
+  ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+  Calendar: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
+  Clock: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Play: (props) => <svg width={props.size || "24"} height={props.size || "24"} viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m7 4 12 8-12 8V4z"/></svg>,
+  Copy: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>,
+  ArrowLeft: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+  Shield: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>,
+  Info: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+};
+
+const IOSStatusBar = () => (
+  <div className="status-bar">
+    <div>9:41</div>
+    <div className="status-icons">
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><path d="M14.5 1h-12A1.5 1.5 0 0 0 1 2.5v6A1.5 1.5 0 0 0 2.5 10h12A1.5 1.5 0 0 0 16 8.5v-6A1.5 1.5 0 0 0 14.5 1ZM16 3.5v4c.75 0 1 .5 1 1s-.25 1-1 1h-14.5A2.5 2.5 0 0 1 0 7.5v-4A2.5 2.5 0 0 1 2.5 1h12A2.5 2.5 0 0 1 17 3.5Z"/><path d="M2.5 2.5h12v6h-12z"/></svg>
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><path d="M7.5 11l7.5-11h-15z"/></svg>
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><path d="M1 11h1v-2h-1zm3 0h1v-4h-1zm3 0h1v-7h-1zm3 0h1v-9h-1zm3 0h1v-11h-1z"/></svg>
+    </div>
+  </div>
+);
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState('Competitions');
+  const [showDetail, setShowDetail] = useState(true);
+
+  const renderContent = () => {
+    if (showDetail) return <ObjectivePage onBack={() => setShowDetail(false)} />;
+
+    switch (activeTab) {
+      case 'Home': return <HomeScreen onCompClick={() => setShowDetail(true)} />;
+      case 'Explore': return <ExploreScreen onCompClick={() => setShowDetail(true)} />;
+      case 'Competitions': return <CompetitionsScreen onCompClick={() => setShowDetail(true)} />;
+      case 'Profile': return <ProfileScreen />;
+      default: return <HomeScreen />;
+    }
+  };
+
+  return (
+    <div id="app-container">
+      <IOSStatusBar />
+      <div className="nav-content">
+        {renderContent()}
+      </div>
+
+      {!showDetail && (
+        <div className="bottom-nav">
+          <NavItem icon={<Icons.Home />} label="Home" active={activeTab === 'Home'} onClick={() => setActiveTab('Home')} />
+          <NavItem icon={<Icons.Search />} label="Explore" active={activeTab === 'Explore'} onClick={() => setActiveTab('Explore')} />
+          <div className="center-fab">
+            <Icons.Plus />
+          </div>
+          <NavItem icon={<Icons.Trophy />} label="Competitions" active={activeTab === 'Competitions'} onClick={() => setActiveTab('Competitions')} />
+          <NavItem icon={<Icons.User />} label="Profile" active={activeTab === 'Profile'} onClick={() => setActiveTab('Profile')} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const NavItem = ({ icon, label, active, onClick }) => (
+  <div className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>
+    {icon}
+    <span>{label}</span>
+  </div>
+);
+
+const HomeScreen = ({ onCompClick }) => (
+  <div className="p-4">
+    <div className="flex justify-between items-center mb-6">
+      <div>
+        <h2 className="text-xl font-bold">Namaste, Dhruv!</h2>
+        <p className="text-muted text-sm">Ready to dance today?</p>
+      </div>
+      <div className="w-12 h-12 rounded-full bg-teal-100 border-2 border-teal-500 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150" alt="Avatar" />
+      </div>
+    </div>
+
+    <h3 className="font-bold mb-3">My Competitions</h3>
+    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+      {[1, 2].map(i => (
+        <div key={i} className="min-w-[280px] bg-white p-4 rounded-2xl shadow-sm border border-slate-100" onClick={onCompClick}>
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">Classical Dance</span>
+            <span className="text-[10px] px-2 py-1 bg-green-100 text-green-700 rounded-full font-bold">Registered</span>
+          </div>
+          <h4 className="font-bold">Feedants Classical Solo</h4>
+          <p className="text-xs text-muted mt-1">Submission closes in 2 days</p>
+        </div>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-3 gap-3 my-6">
+      <StatCard label="Joined" value="12" />
+      <StatCard label="Wins" value="03" />
+      <StatCard label="Certificates" value="08" />
+    </div>
+
+    <div className="bg-teal-50 p-4 rounded-2xl flex items-center justify-between mb-6">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-teal-100 rounded-lg text-teal-600"><Icons.Plus /></div>
+        <div>
+          <p className="font-bold text-sm">Refer & Earn</p>
+          <p className="text-xs text-teal-700">Get ₹10 for every signup</p>
+        </div>
+      </div>
+      <Icons.ChevronRight />
+    </div>
+  </div>
+);
+
+const StatCard = ({ label, value }) => (
+  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 text-center">
+    <p className="text-lg font-bold text-teal-600">{value}</p>
+    <p className="text-[10px] text-muted uppercase font-bold tracking-tight">{label}</p>
+  </div>
+);
+
+const CompetitionsScreen = ({ onCompClick }) => {
+  const [tab, setTab] = useState('Ongoing');
+  return (
+    <div>
+      <div className="px-4 py-2 border-b border-slate-100 bg-white sticky top-0 z-10">
+        <h2 className="text-lg font-bold mb-4">Competitions</h2>
+        <div className="flex gap-6">
+          {['Ongoing', 'Upcoming', 'Past'].map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`pb-2 text-sm font-bold border-b-2 transition-colors ${tab === t ? 'border-teal-600 text-teal-600' : 'border-transparent text-muted'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="p-4 space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100" onClick={onCompClick}>
+            <div className="h-40 bg-teal-100 relative">
+              <img src={`https://images.unsplash.com/photo-1547153760-18fc86324498?auto=format&fit=crop&w=600&q=80`} className="w-full h-full object-cover opacity-80" />
+              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold">₹1,500 Prize Pool</div>
+            </div>
+            <div className="p-4">
+              <h3 className="font-bold text-lg">Feedants Classical Dance {i}</h3>
+              <div className="flex justify-between items-center mt-3">
+                <div className="text-xs text-muted">Entry Fee: <span className="font-bold text-teal-600">₹99</span></div>
+                <button className="bg-teal-600 text-white text-xs px-4 py-2 rounded-lg font-bold">Register Now</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ExploreScreen = ({ onCompClick }) => (
+  <div className="p-4">
+    <div className="relative mb-4">
+      <div className="absolute left-3 top-3 text-muted"><Icons.Search /></div>
+      <input
+        type="text"
+        placeholder="Search competitions..."
+        className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+      />
+    </div>
+    <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
+      {['Classical', 'Hip-Hop', 'Folk', 'Contemporary', 'Bollywood'].map(cat => (
+        <span key={cat} className="px-4 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium whitespace-nowrap">{cat}</span>
+      ))}
+    </div>
+    <h3 className="font-bold mb-4">Trending Now</h3>
+    <div className="space-y-4">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="flex gap-4 bg-white p-3 rounded-xl shadow-sm border border-slate-100" onClick={onCompClick}>
+          <div className="w-20 h-20 bg-teal-50 rounded-lg overflow-hidden flex-shrink-0">
+             <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=150" className="w-full h-full object-cover" />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-bold text-sm">Monsoon Special Solo</h4>
+            <p className="text-[10px] text-muted">₹2,000 Pool • 12 Spots left</p>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs font-bold text-teal-600">₹49 Entry</span>
+              <Icons.ChevronRight />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ProfileScreen = () => (
+  <div className="p-4">
+    <div className="text-center py-6">
+      <div className="relative inline-block">
+        <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-md overflow-hidden mx-auto">
+          <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150" alt="Avatar" />
+        </div>
+        <div className="absolute bottom-0 right-0 bg-teal-600 text-white p-1.5 rounded-full border-2 border-white">
+          <Icons.Plus />
+        </div>
+      </div>
+      <h2 className="text-xl font-bold mt-4">Dhruv Choudhary</h2>
+      <p className="text-sm text-muted">Bharatnatyam & Folk Dancer</p>
+    </div>
+
+    <div className="space-y-3 mt-4">
+      <ProfileItem icon={<Icons.User />} label="Edit Profile" />
+      <ProfileItem icon={<Icons.Trophy />} label="My Achievements" />
+      <ProfileItem icon={<Icons.Shield />} label="Security & Privacy" />
+      <ProfileItem icon={<Icons.Info />} label="Help & Support" />
+      <div className="pt-4">
+        <button className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl">Logout</button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProfileItem = ({ icon, label }) => (
+  <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-100">
+    <div className="flex items-center gap-3">
+      <span className="text-teal-600">{icon}</span>
+      <span className="font-medium text-sm">{label}</span>
+    </div>
+    <Icons.ChevronRight />
+  </div>
+);
+
+const ObjectivePage = ({ onBack }) => {
+  const [activeTab, setActiveTab] = useState('About Competition');
+
+  return (
+    <div className="bg-white min-h-screen">
+      {/* Header Bar */}
+      <div className="flex justify-between items-center p-4">
+        <button onClick={onBack} className="flex items-center gap-1 text-teal-700 font-bold text-sm">
+          <Icons.ArrowLeft /> Go back
+        </button>
+        <div className="bg-slate-100 p-1 rounded-full flex gap-1 text-[10px] font-bold">
+          <span className="bg-teal-600 text-white px-3 py-1 rounded-full">ENG</span>
+          <span className="text-muted px-3 py-1">हिंदी</span>
+        </div>
+      </div>
+
+      {/* Main Header Card */}
+      <div className="card border border-teal-100">
+        <div className="flex justify-between items-start mb-4">
+          <h1 className="text-2xl font-black text-teal-800 leading-tight">Feedants Classical<br/>Dance</h1>
+          <div className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+            Registered
+          </div>
+        </div>
+
+        <div className="flex gap-2 mb-4">
+          <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold">Dance</span>
+          <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold">Multi-Win</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-yellow-600 mb-6 font-bold text-xs italic">
+          <Icons.Trophy /> Winners get certificate
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 py-4 border-y border-slate-100">
+          <div className="text-center border-r border-slate-100">
+            <p className="text-[10px] text-muted font-bold uppercase">Prize Pool</p>
+            <p className="text-lg font-black text-teal-700">₹1,500</p>
+          </div>
+          <div className="text-center border-r border-slate-100">
+            <p className="text-[10px] text-muted font-bold uppercase">Entry Fee</p>
+            <p className="text-lg font-black text-teal-700">₹99</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-red-500 font-bold uppercase">Spots</p>
+            <p className="text-[10px] font-bold mt-1">Only 19 left</p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex justify-between text-[10px] font-bold mb-1 text-muted">
+            <span>Progress</span>
+            <span>1 / 20 Booked</span>
+          </div>
+          <div className="progress-bar-container">
+            <div className="progress-bar-fill" style={{width: '5%'}}></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Judge Card */}
+      <div className="card flex items-center gap-4 border border-slate-100">
+        <div className="w-16 h-16 rounded-full bg-slate-200 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150" alt="Judge" />
+        </div>
+        <div className="flex-1">
+          <span className="text-[9px] font-black text-teal-600 uppercase tracking-widest">Judge</span>
+          <h3 className="font-black text-lg">Manju Dubey</h3>
+          <p className="text-[10px] text-muted leading-tight">Professional Kathak Dancer<br/>12+ Years of Experience</p>
+        </div>
+        <div className="text-center flex flex-col items-center gap-1">
+          <div className="w-10 h-10 bg-teal-100 rounded-full flex justify-center items-center text-teal-700">
+            <Icons.Play size="20" />
+          </div>
+          <span className="text-[8px] font-black uppercase text-teal-700">Intro Video</span>
+        </div>
+      </div>
+
+      {/* Countdown Banner */}
+      <div className="bg-teal-50 mx-4 p-4 rounded-2xl flex justify-between items-center border border-teal-100">
+        <div className="flex items-center gap-3">
+          <div className="text-teal-600">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 2h14"/><path d="M5 22h14"/><path d="M6 2v6.7c0 .8.4 1.5 1 2l5 3.3 5-3.3c.6-.5 1-1.2 1-2V2"/><path d="M6 22v-6.7c0-.8.4-1.5 1-2l5-3.3 5 3.3c.6.5 1 1.2 1 2v6.7"/></svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-teal-700 uppercase">Registration closes in</p>
+            <p className="text-sm font-black text-teal-800 tabular-nums">01d : 06h : 28m : 32s</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <Icons.Clock />
+          <span className="text-[8px] font-bold text-red-500 uppercase">Hurry up!</span>
+        </div>
+      </div>
+
+      {/* Important Dates */}
+      <div className="p-4">
+        <h3 className="font-black text-sm mb-3 uppercase tracking-wider text-slate-400">Important Dates</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <DateCard icon={<Icons.Calendar />} title="Register Before" date="10 Aug 26" time="11:50 PM" />
+          <DateCard icon={<Icons.Plus />} title="Submission Starts" date="6 Aug 26" time="04:00 AM" />
+          <DateCard icon={<Icons.Plus />} title="Submission Ends" date="30 Aug 26" time="11:55 PM" />
+          <DateCard icon={<Icons.Trophy />} title="Result Date" date="1 Sept 26" time="11:50 PM" />
+        </div>
+      </div>
+
+      {/* Previous Winners */}
+      <div className="p-4">
+        <h3 className="font-black text-sm mb-3 uppercase tracking-wider text-slate-400">Previous Winners</h3>
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+          <WinnerCard name="Riya Shah" pos="1st" img="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150" />
+          <WinnerCard name="Aarav Mehta" pos="1st" img="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150" />
+          <WinnerCard name="Neha Verma" pos="2nd" img="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150" />
+          <WinnerCard name="Ishita Cho..." pos="3rd" img="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150" />
+        </div>
+      </div>
+
+      {/* Tabbed Content */}
+      <div className="p-4">
+        <div className="flex gap-6 border-b border-slate-100 mb-4 overflow-x-auto no-scrollbar">
+          {['About Competition', 'Judging Parameters', 'Rules & Eligibility'].map(t => (
+            <button key={t} onClick={() => setActiveTab(t)} className={`pb-2 text-xs font-black whitespace-nowrap border-b-2 transition-all ${activeTab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-muted'}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          This is an online classical dance competition open for all age groups. Participate from anywhere and showcase your talent. Express your passion through traditional dance.
+        </p>
+        <button className="text-teal-600 font-bold text-xs mt-2">View more ⌄</button>
+      </div>
+
+      {/* Rewards Table */}
+      <div className="p-4">
+        <h3 className="font-black text-sm mb-3 uppercase tracking-wider text-slate-400">Rewards (All Positions)</h3>
+        <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+          <RewardRow icon="🏆" label="1st Winner" prize="₹550" bold />
+          <RewardRow icon="🥈" label="2nd Winner" prize="₹300" />
+          <RewardRow icon="🥉" label="3rd Winner" prize="₹240" />
+          <RewardRow icon="⭐" label="4th Winner" prize="₹200" />
+          <RewardRow icon="⭐" label="5th Winner" prize="₹130" />
+          <RewardRow icon="⭐" label="6th Winner" prize="₹80" />
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="bg-red-50 m-4 p-3 rounded-xl border border-red-100 flex gap-3">
+        <div className="text-red-500 flex-shrink-0"><Icons.Info /></div>
+        <p className="text-[10px] text-red-700 font-medium">Disclaimer: Only contributions from paid participants will be considered for judging.</p>
+      </div>
+
+      {/* Info Row */}
+      <div className="px-4 py-2 space-y-4">
+        <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100">
+          <div className="bg-teal-100 p-2 rounded-full text-teal-600"><Icons.Play size="16" /></div>
+          <div>
+            <p className="text-xs font-black">How will you receive prize money?</p>
+            <p className="text-[10px] text-muted">Watch video to know more</p>
+          </div>
+        </div>
+        <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+            <Icons.Shield /> Refund policy
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+            <Icons.Shield /> Secure by <span className="text-teal-600 font-black">Razorpay</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Referral Banner */}
+      <div className="bg-green-50 m-4 p-4 rounded-2xl border border-green-100">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="text-green-600">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8l2.1 3.1a.7.7 0 0 0 1.2-.6l-.8-3.8"/></svg>
+          </div>
+          <h4 className="text-xs font-black text-green-800 uppercase">Refer & Earn more discount</h4>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1 bg-white border border-green-200 px-3 py-2 rounded-lg text-[10px] text-muted truncate">
+            https://feedants.com/r/referral123
+          </div>
+          <button className="bg-teal-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">Copy</button>
+        </div>
+        <button className="w-full bg-teal-800 text-white py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-teal-900/20">Refer Now</button>
+        <p className="text-center text-[10px] font-bold text-green-700 mt-2">You earn ₹10 for every signup</p>
+      </div>
+
+      {/* Testimonials */}
+      <div className="p-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-teal-50 rounded-full flex justify-center items-center text-teal-600">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase">Hear From Our Users</p>
+            <p className="text-[10px] text-muted">See what participants say about Feedants</p>
+          </div>
+        </div>
+        <Icons.ChevronRight />
+      </div>
+
+      {/* Ad Placeholder */}
+      <div className="m-4 border-2 border-dashed border-slate-200 p-8 rounded-2xl flex flex-col items-center gap-2 text-slate-300">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l18-5v12L3 13v-2z"/></svg>
+        <span className="font-black text-sm uppercase">Ad Here</span>
+      </div>
+
+      {/* Sticky Bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 z-[110] max-w-[430px] mx-auto">
+        <button className="w-full bg-teal-800 text-white py-4 rounded-2xl font-black shadow-lg shadow-teal-900/30 flex flex-col items-center leading-tight">
+          <span className="text-base uppercase">Upload Submission</span>
+          <span className="text-[10px] font-medium opacity-80">Registered</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const DateCard = ({ icon, title, date, time }) => (
+  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+    <div className="text-teal-600 mb-2">{icon}</div>
+    <p className="text-[9px] font-black text-muted uppercase leading-tight mb-1">{title}</p>
+    <p className="text-[11px] font-black text-teal-800">{date}</p>
+    <p className="text-[9px] font-medium text-slate-400">{time}</p>
+  </div>
+);
+
+const WinnerCard = ({ name, pos, img }) => (
+  <div className="flex-shrink-0 text-center w-20">
+    <div className="relative mb-2">
+      <div className="w-16 h-16 rounded-2xl bg-slate-100 mx-auto overflow-hidden shadow-sm">
+        <img src={img} className="w-full h-full object-cover" />
+      </div>
+      <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full flex justify-center items-center shadow-sm text-teal-600">
+        <Icons.Play size="14" />
+      </div>
+    </div>
+    <p className="text-[10px] font-black truncate">{name}</p>
+    <p className="text-[8px] font-bold text-teal-600 uppercase">{pos} Winner</p>
+  </div>
+);
+
+const RewardRow = ({ icon, label, prize, bold }) => (
+  <div className={`flex justify-between items-center p-3 border-b border-white/50 ${bold ? 'bg-teal-50/50' : ''}`}>
+    <div className="flex items-center gap-3">
+      <span className="text-sm">{icon}</span>
+      <span className={`text-xs ${bold ? 'font-black' : 'font-medium'}`}>{label}</span>
+    </div>
+    <span className={`text-xs ${bold ? 'font-black text-teal-700' : 'font-bold'}`}>{prize}</span>
+  </div>
+);
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
