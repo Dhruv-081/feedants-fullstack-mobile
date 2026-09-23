@@ -75,3 +75,7 @@ npx expo start -c
 
 - `GET /api/competitions/:id` - Fetches full details for a competition along with user registration status.
 - `POST /api/competitions/:id/register` - Registers a user for the competition with atomic spot checks.
+
+
+## Working Video For This
+- `https://drive.google.com/drive/folders/1raguuMIWlDSIHr3mX5xa_oL-LnFTKvgU?usp=sharing`
